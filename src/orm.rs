@@ -29,6 +29,14 @@ impl Orm {
         format!("SELECT {};", columns)
     }
 
+    pub fn insert_or_ignore(table: &str) -> Orm<InsertColumns> {
+        Orm {
+            query: format!("INSERT OR IGNORE INTO {table}"),
+            has_where_clause: false,
+            state: PhantomData,
+        }
+    }
+
     pub fn insert(table: &str) -> Orm<InsertColumns> {
         Orm {
             query: format!("INSERT INTO {table}"),
@@ -64,9 +72,10 @@ impl Orm<Set> {
     }
 }
 
+#[allow(clippy::single_char_add_str)]
 impl<State> Orm<State> {
     pub fn ready(&mut self) -> String {
-        if self.query.ends_with(",") {
+        if self.query.ends_with(',') {
             self.query.pop();
         }
         self.query.push_str(";");
@@ -271,7 +280,7 @@ impl Orm<Where> {
         self.and_for_where();
         let value_list = values
             .iter()
-            .map(|value| format!("{}", Self::correct_value(value)))
+            .map(|value| Self::correct_value(value).to_string())
             .collect::<Vec<String>>()
             .join(", ");
         self.query
@@ -283,7 +292,7 @@ impl Orm<Where> {
         self.and_for_where();
         let value_list = values
             .iter()
-            .map(|value| format!("{}", Self::correct_value(value)))
+            .map(|value| Self::correct_value(value).to_string())
             .collect::<Vec<String>>()
             .join(", ");
         self.query
@@ -304,7 +313,7 @@ impl Orm<Where> {
         if value.parse::<f64>().is_ok() || value.parse::<i64>().is_ok() {
             return value.to_string();
         }
-        return format!("'{}'", value.to_owned());
+        format!("'{}'", value.to_owned())
     }
 }
 

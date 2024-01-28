@@ -1,6 +1,6 @@
 [package]
 name = "aromatic"
-version = "0.1.0"
+version = "0.1.1"
 license = "MIT OR Apache-2.0"
 edition = "2021"
 repository = "https://github.com/lucas-montes/aromatic"
@@ -18,3 +18,4 @@ sqlx = { version = "0.7.0", features = ["sqlite", "runtime-tokio", "tls-rustls"]
 tracing = "0.1"
 serde = { version = "1.0.163", features = ["derive", "rc"] }
 clap = "4.3.19"
+

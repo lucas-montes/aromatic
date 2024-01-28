@@ -68,7 +68,6 @@ pub async fn migrate(folder_path: &str) {
                 error_message = format!("{err}"),
                 message = "Could not create the migrations table",
             );
-            return;
         });
     let migrations_history = match get_migrations_history(&mut transaction).await {
         Ok(m) => m,
@@ -102,7 +101,7 @@ pub async fn migrate(folder_path: &str) {
         },
     }
     match commit_transaction(transaction).await {
-        Ok(_) => println!("Migration completed"),
+        Ok(_) => (),
         Err(err) => error!(
             function = "commit_transaction",
             error_message = format!("{err}"),
@@ -113,14 +112,13 @@ pub async fn migrate(folder_path: &str) {
 
 async fn create_database(db_url: &str) {
     match Sqlite::create_database(db_url).await {
-        Ok(_) => println!("database created"),
+        Ok(_) => (),
         Err(err) => {
             error!(
                 function = "create_database",
                 error_message = format!("{err}"),
                 message = "Error creating the database",
             );
-            return;
         },
     };
 }
@@ -205,13 +203,11 @@ async fn run_migrations<'a>(
             )
             .await
             {
-                println!("skip me: {:?}", &migration);
                 continue;
             } else {
                 id_to_update = Some(migration.id);
             }
         };
-        println!("running not initial migrations: {:?}", &migration_file.name);
         make_migration(&mut migration_file, transaction, id_to_update).await;
     }
 }
@@ -241,16 +237,14 @@ async fn skip_migration(
 ) -> bool {
     if migration_has_been_run {
         // if the migration has been ran we skip it
-        return true;
+        true
+    } else if run_test_migrations {
+        // if the migration hasn't been ran and we want to run the tests migrations, we don't want to skip this migration
+        false
     } else {
-        if run_test_migrations {
-            // if the migration hasn't been ran and we want to run the tests migrations, we don't want to skip this migration
-            return false;
-        } else {
-            // if we don't want to run the tests migrations we'll check if it contains "test" in the name
-            // if it contains "test" we skip the migration
-            return name.contains("test");
-        }
+        // if we don't want to run the tests migrations we'll check if it contains "test" in the name
+        // if it contains "test" we skip the migration
+        name.contains("test")
     }
 }
 
@@ -270,7 +264,6 @@ async fn make_migration<'a>(
                 error_message = format!("{:?}", err),
                 message = format!("Could not run migration {:?}", migration_file),
             );
-            return;
         },
     }
 }
@@ -285,7 +278,7 @@ async fn save_or_update<'a>(
         None => save_migration_to_history(migration_file, transaction).await,
     };
     match result {
-        Ok(_) => println!("Migration saved"),
+        Ok(_) => (),
         Err(err) => {
             error!(
                 function = "save_or_update",
@@ -381,8 +374,8 @@ async fn save_migration_to_history<'a>(
     }
 }
 
-async fn commit_transaction<'a>(
-    transaction: Transaction<'a, Sqlite>,
+async fn commit_transaction(
+    transaction: Transaction<'_, Sqlite>,
 ) -> Result<(), sqlx::Error> {
     match transaction.commit().await {
         Ok(_) => Ok(()),
@@ -406,7 +399,7 @@ async fn transaction<'a>() -> Result<Transaction<'a, Sqlite>, sqlx::Error> {
                 error_message = format!("{err}"),
                 message = "transaction errror launching",
             );
-            return Err(err);
+            Err(err)
         },
     }
 }
@@ -431,23 +424,23 @@ mod tests {
 
     #[tokio::test]
     async fn test_skip_migration_skip_test_migrations() {
-        assert_eq!(skip_migration(false, "migration", false).await, false);
+        assert!(!skip_migration(false, "migration", false).await);
 
-        assert_eq!(skip_migration(true, "migration", false).await, true);
+        assert!(skip_migration(true, "migration", false).await);
 
-        assert_eq!(skip_migration(false, "test_migration", false).await, true);
+        assert!(skip_migration(false, "test_migration", false).await);
 
-        assert_eq!(skip_migration(true, "test_migration", false).await, true);
+        assert!(skip_migration(true, "test_migration", false).await);
     }
 
     #[tokio::test]
     async fn test_skip_migration_run_test_migrations() {
-        assert_eq!(skip_migration(false, "migration", true).await, false);
+        assert!(!skip_migration(false, "migration", true).await);
 
-        assert_eq!(skip_migration(true, "migration", true).await, true);
+        assert!(skip_migration(true, "migration", true).await);
 
-        assert_eq!(skip_migration(false, "test_migration", true).await, false);
+        assert!(!skip_migration(false, "test_migration", true).await);
 
-        assert_eq!(skip_migration(true, "test_migration", true).await, true);
+        assert!(skip_migration(true, "test_migration", true).await);
     }
 }
