@@ -6,16 +6,22 @@ edition = "2021"
 repository = "https://github.com/lucas-montes/aromatic"
 authors = ["Lucas Montes <lluc23@hotmail.com>"]
 description = "Automatic ORM"
+default-run = "aromacli"
 
-[lib]
-name = "aromatic"
-path = "src/lib.rs"
+[[bin]]
+name = "aromacli"
+path = "src/bin/aromacli.rs"
+
+# enables invocation as `cargo aromacli`; required for `prepare` subcommand
+[[bin]]
+name = "cargo-aromacli"
+path = "src/bin/cargo-aromacli.rs"
 
 [dependencies]
 tokio = { version = "1.28.2", features = ["full"] }
-menva = "0.1.0"
+menva = "0.1.1"
 sqlx = { version = "0.7.0", features = ["sqlite", "runtime-tokio", "tls-rustls"]}
 tracing = "0.1"
 serde = { version = "1.0.163", features = ["derive", "rc"] }
 clap = "4.3.19"
-
+console = "0.15.0"
