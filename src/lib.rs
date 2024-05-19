@@ -1,7 +1,7 @@
 mod cli;
-mod migrations;
+mod create_migrations;
 mod orm;
 
 pub use cli::run_cli;
-pub use migrations::migrate;
+pub use create_migrations::makemigrations;
 pub use orm::Orm;

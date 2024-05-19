@@ -1,7 +1,5 @@
 use clap::{Arg, ArgAction, ArgMatches, Command};
 
-use super::migrate;
-
 pub async fn run_cli() {
     let matches = Command::new("AromaCLIck")
         .version("0.1.0")
@@ -21,6 +19,6 @@ pub async fn run_cli() {
 
 async fn handle_cli(matches: ArgMatches) {
     if *matches.get_one("migrate").unwrap_or(&false) {
-        migrate("migrations/sqlite").await;
+        // migrate("migrations/sqlite").await;
     }
 }
